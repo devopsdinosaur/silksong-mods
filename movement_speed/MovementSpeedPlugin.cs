@@ -15,7 +15,7 @@ public static class PluginInfo {
     public const string SHORT_DESCRIPTION = "Change player movement speed using in-game configurable multipliers.";
 	public const string EXTRA_DETAILS = "This mod does not make any permanent changes to the game files.  It simply modifies the strings in memory for the duration of the game.  Removing the mod and restarting the game will revert everything to its default state.";
 
-	public const string VERSION = "0.0.2";
+	public const string VERSION = "0.0.3";
 
     public const string AUTHOR = "devopsdinosaur";
     public const string GAME_TITLE = "Silksong";
@@ -44,6 +44,7 @@ public class NpcRenamePlugin : DDPlugin {
 			m_instance = this;
             this.m_plugin_info = PluginInfo.to_dict();
             Settings.Instance.early_load(m_instance);
+            Hotkeys.load();
             m_instance.create_nexus_page();
             this.m_harmony.PatchAll();
             logger.LogInfo($"{PluginInfo.GUID} v{PluginInfo.VERSION} loaded.");
@@ -70,9 +71,10 @@ public class NpcRenamePlugin : DDPlugin {
                 if (m_original_dash_speed == -1) {
                     m_original_dash_speed = __instance.DASH_SPEED;
                 }
-                if (Settings.m_enabled.Value) {
-                    __instance.DASH_SPEED = m_original_dash_speed * Settings.m_dash_speed_multiplier.Value;
+                if (Hotkeys.is_modifier_hotkey_down() && Hotkeys.is_hotkey_down(Hotkeys.HOTKEY_TOGGLE_ENABLED)) {
+                    Settings.m_enabled.Value = !Settings.m_enabled.Value;
                 }
+                __instance.DASH_SPEED = m_original_dash_speed * (Settings.m_enabled.Value ? Settings.m_dash_speed_multiplier.Value : 1);
                 return true;
             } catch { }
             return true;
