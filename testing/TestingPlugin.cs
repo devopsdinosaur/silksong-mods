@@ -64,6 +64,13 @@ public class NpcRenamePlugin : DDPlugin {
 		}
 	}
 
+	[HarmonyPatch(typeof(HeroController), "FixedUpdate")]
+	class HarmonyPatch_HeroController_FixedUpdate {
+		private static void Postfix() {
+			PlayerData.instance.GetAllPowerups();
+		}
+	}
+
 	/*
 	[HarmonyPatch(typeof(EnemyDeathEffects), "ReceiveDeathEvent", new Type[] { typeof(float), typeof(AttackTypes), typeof(NailElements), typeof(GameObject), typeof(float), typeof(bool), typeof(Action<Transform>), typeof(bool), typeof(GameObject) })]
 	class HarmonyPatch_EnembyDeathEffects_ReceiveDeathEvent {

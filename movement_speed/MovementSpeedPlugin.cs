@@ -15,7 +15,7 @@ public static class PluginInfo {
     public const string SHORT_DESCRIPTION = "Change player movement speed using in-game configurable multipliers.";
 	public const string EXTRA_DETAILS = "This mod does not make any permanent changes to the game files.  It simply modifies the strings in memory for the duration of the game.  Removing the mod and restarting the game will revert everything to its default state.";
 
-	public const string VERSION = "0.0.1";
+	public const string VERSION = "0.0.2";
 
     public const string AUTHOR = "devopsdinosaur";
     public const string GAME_TITLE = "Silksong";
@@ -36,6 +36,7 @@ public static class PluginInfo {
 public class NpcRenamePlugin : DDPlugin {
 	private static NpcRenamePlugin m_instance = null;
     private Harmony m_harmony = new Harmony(PluginInfo.GUID);
+    private static float m_original_dash_speed = -1;
 
 	private void Awake() {
         logger = this.Logger;
@@ -51,12 +52,30 @@ public class NpcRenamePlugin : DDPlugin {
         }
     }
 
-	[HarmonyPatch(typeof(HeroController), "GetRunSpeed")]
-	class HarmonyPatch_HeroController_GetRunSpeed {
-		private static void Postfix(HeroController __instance, ref float __result) {
+    [HarmonyPatch(typeof(HeroController), "GetRunSpeed")]
+    class HarmonyPatch_HeroController_GetRunSpeed {
+        private static void Postfix(HeroController __instance, ref float __result) {
             try {
-                __result *= Settings.m_speed_multiplier.Value;
-            } catch {}
-		}
-	}
+                if (Settings.m_enabled.Value) {
+                    __result *= Settings.m_speed_multiplier.Value;
+                }
+            } catch { }
+        }
+    }
+
+    [HarmonyPatch(typeof(HeroController), "Update")]
+    class HarmonyPatch_HeroController_Update {
+        private static bool Prefix(HeroController __instance) {
+            try {
+                if (m_original_dash_speed == -1) {
+                    m_original_dash_speed = __instance.DASH_SPEED;
+                }
+                if (Settings.m_enabled.Value) {
+                    __instance.DASH_SPEED = m_original_dash_speed * Settings.m_dash_speed_multiplier.Value;
+                }
+                return true;
+            } catch { }
+            return true;
+        }
+    }
 }
